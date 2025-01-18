@@ -3,6 +3,7 @@ import axios from "axios";
 import { motion } from "motion/react";
 
 const Projects = () => {
+  const url = "https://portfolio-backend-u6ve.onrender.com"
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
@@ -47,7 +48,7 @@ const Projects = () => {
 
     try {
       const response = await axios.post(
-        "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/createProject",
+        `${url}/api/v1/projects/createProject`,
         formData,
         {
           headers: {
@@ -72,7 +73,7 @@ const Projects = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/allProjects"
+          `${url}/api/v1/projects/allProjects`
         );
         setProjects(response.data.data);
         setLoading(false);
@@ -91,7 +92,7 @@ const Projects = () => {
     if (isConfirmed) {
       try {
         await axios.delete(
-          `https://portfolio-backend-u6ve.onrender.com/api/v1/projects/delete/${projectId}`
+          `${url}/api/v1/projects/delete/${projectId}`
         );
         setProjects((prevProjects) =>
           prevProjects.filter((project) => project._id !== projectId)
