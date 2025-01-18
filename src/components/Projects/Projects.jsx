@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import axios from "axios";
 import { motion } from "motion/react";
 
 const Projects = () => {
+  const url = "http://localhost:8000";
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
@@ -39,6 +41,11 @@ const Projects = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!title || !description || !link || !image) {
+      setMessage("Please fill out all fields.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("description", description);
@@ -47,7 +54,7 @@ const Projects = () => {
 
     try {
       const response = await axios.post(
-        "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/createProject",
+        `${url}/api/v1/projects/createProject`,
         formData,
         {
           headers: {
@@ -55,61 +62,65 @@ const Projects = () => {
           },
         }
       );
-
-      setMessage(response.data.message);
+      setMessage(response.data.message || "Project added successfully!");
       setTitle("");
       setDescription("");
       setLink("");
       setImage(null);
       fileInputRef.current.value = "";
+      fetchProjects(); // Refresh projects after submission
     } catch (error) {
-      setMessage(`Something went wrong: ${error.response?.data?.message}`);
+      setMessage(
+        `Something went wrong: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     }
   };
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/allProjects"
-        );
-        setProjects(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        console.log(`Something went wrong: ${error.response?.data}`);
-        setLoading(false);
-      }
-    };
-    fetchProjects();
+  const fetchProjects = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${url}/api/v1/projects/allProjects`);
+      setProjects(response.data.data || []);
+    } catch (error) {
+      console.error(
+        "Error fetching projects:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
   const deleteProject = async (projectId) => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this project?"
-    );
-    if (isConfirmed) {
+    if (window.confirm("Are you sure you want to delete this project?")) {
       try {
-        await axios.delete(
-          `https://portfolio-backend-u6ve.onrender.com/api/v1/projects/delete/${projectId}`
-        );
+        await axios.delete(`${url}/api/v1/projects/delete/${projectId}`);
         setProjects((prevProjects) =>
           prevProjects.filter((project) => project._id !== projectId)
         );
       } catch (error) {
-        console.log("Something went wrong:", error);
+        console.error(
+          "Error deleting project:",
+          error.response?.data || error.message
+        );
       }
     }
   };
 
   return (
-    <main className="mx-auto py-6 ">
+    <main className="mx-auto py-6">
       <div className="fixed top-0 -z-10 h-full w-full">
         <div className="absolute top-0 z-[-2] h-screen w-screen bg-[#000000] bg-[radial-gradient(#ffffff33_1px,#00091d_1px)] bg-[size:20px_20px]"></div>
       </div>
 
       {adminLogin && (
-        <section className="text-orange-100 bg-transparent rounded-xl  p-6 w-full sm:w-3/4 lg:w-1/2 mx-auto shadow-inner shadow-white  my-8  border-2 ">
+        <section className="text-orange-100 bg-transparent rounded-xl p-6 w-full sm:w-3/4 lg:w-1/2 mx-auto shadow-inner shadow-white my-8 border-2">
           <form
             onSubmit={handleSubmit}
             className="flex flex-col gap-4 items-center"
@@ -153,7 +164,7 @@ const Projects = () => {
                 onChange={handleImageChange}
                 type="file"
                 required
-                className="w-full px-4 py-2 rounded-lg mt-1 bg-slate-50 bg-transparent border-2"
+                className="w-full px-4 py-2 rounded-lg mt-1 bg-transparent border-2"
               />
             </label>
             <button
@@ -177,7 +188,9 @@ const Projects = () => {
       </motion.h1>
 
       {loading ? (
-        <div className="text-center text-orange-300 font-bold text-xl my-96">Loading...</div>
+        <div className="text-center text-orange-300 font-bold text-xl my-96">
+          Loading...
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-8 px-8">
           {projects.map((project) => (
@@ -186,13 +199,13 @@ const Projects = () => {
               initial={{ opacity: 0, x: -100 }}
               transition={{ duration: 1.5 }}
               key={project._id}
-              className="bg-transparent shadow-inner shadow-slate-100 rounded-lg p-4 "
+              className="bg-transparent shadow-inner shadow-slate-100 rounded-lg p-4"
             >
               {project.image.url && (
                 <img
                   src={project.image.url}
                   alt={project.title}
-                  className="w-full h-48 object-cover rounded-xl mb-4 border-orange-100 border-2 "
+                  className="w-full h-48 object-cover rounded-xl mb-4 border-orange-100 border-2"
                 />
               )}
               <h3 className="font-bold text-lg text-center my-4 text-orange-50 shadow-xl rounded-3xl">
@@ -201,12 +214,11 @@ const Projects = () => {
               <p className="text-orange-100 opacity-70 text-sm line-clamp-3 h-20 overflow-hidden">
                 {project.description}
               </p>
-
               <div className="text-center bg-orange-200 rounded-lg my-4 hover:bg-orange-500 hover:text-white transition-all duration-500">
                 <a
                   href={project.link}
                   target="_blank"
-                  className="block py-2 "
+                  className="block py-2"
                   rel="noopener noreferrer"
                 >
                   Visit
@@ -231,7 +243,7 @@ const Projects = () => {
         whileInView={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 100 }}
         transition={{ duration: 2 }}
-        className="text-center mt-8 mx-auto flex items-center justify-center "
+        className="text-center mt-8 mx-auto flex items-center justify-center"
       >
         {!adminLogin ? (
           <form
