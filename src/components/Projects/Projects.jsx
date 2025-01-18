@@ -47,7 +47,7 @@ const Projects = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/projects/createProject",
+        "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/createProject",
         formData,
         {
           headers: {
@@ -72,7 +72,7 @@ const Projects = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/v1/projects/allProjects"
+          "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/allProjects"
         );
         setProjects(response.data.data);
         setLoading(false);
@@ -91,7 +91,7 @@ const Projects = () => {
     if (isConfirmed) {
       try {
         await axios.delete(
-          `http://localhost:8000/api/v1/projects/delete/${projectId}`
+          `https://portfolio-backend-u6ve.onrender.com/api/v1/projects/delete/${projectId}`
         );
         setProjects((prevProjects) =>
           prevProjects.filter((project) => project._id !== projectId)
