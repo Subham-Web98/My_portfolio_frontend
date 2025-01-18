@@ -8,7 +8,7 @@ const Header = () => {
     <NavLink
       className={({ isActive }) =>
         isActive
-          ? "text-orange-400 scale-110 font-semibold"
+          ? "text-orange-400 scale-110 font-bold"
           : "text-orange-100 hover:text-orange-200 hover:scale-90 drop-shadow-md transition-all duration-500"
       }
       to={to}
