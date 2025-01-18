@@ -3,8 +3,6 @@ import axios from "axios";
 import { motion } from "motion/react";
 
 const Projects = () => {
-  const url = "http://localhost:8000";
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
@@ -78,19 +76,21 @@ const Projects = () => {
     }
   };
 
-  const fetchProjects = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`${url}/api/v1/projects/allProjects`);
-      setProjects(response.data.data || []);
-    } catch (error) {
-      console.error(
-        "Error fetching projects:",
-        error.response?.data || error.message
-      );
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          "https://portfolio-backend-u6ve.onrender.com/api/v1/projects/allProjects"
+        );
+        setProjects(response.data.data);
+        setLoading(false);
+      } catch (error) {
+        console.log(`Something went wrong: ${error.response?.data}`);
+        setLoading(false);
+      }
+    };
+    fetchProjects();
   }, []);
 
   useEffect(() => {
@@ -100,7 +100,9 @@ const Projects = () => {
   const deleteProject = async (projectId) => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       try {
-        await axios.delete(`${url}/api/v1/projects/delete/${projectId}`);
+        await axios.delete(
+          `https://portfolio-backend-u6ve.onrender.com/api/v1/projects/delete/${projectId}`
+        );
         setProjects((prevProjects) =>
           prevProjects.filter((project) => project._id !== projectId)
         );
